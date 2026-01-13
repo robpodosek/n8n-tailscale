@@ -1,0 +1,55 @@
+services:
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: tailscale
+    hostname: ${TS_HOSTNAME:-n8n}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo '{
+          "columnar_version": 1,
+          "tcp": {
+            "443": {
+              "https": true
+            }
+          },
+          "web": {
+            "${TS_HOSTNAME}.${TS_TAILNET}:443": {
+              "handlers": {
+                "/": {
+                  "proxy": "http://127.0.0.1:5678"
+                }
+              }
+            }
+          },
+          "allow_funnel": {
+             "${TS_HOSTNAME}.${TS_TAILNET}:443": true
+          }
+        }' > /tmp/serve.json && \
+        exec /usr/local/bin/containerboot
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=true
+      - TS_EXTRA_ARGS=--accept-dns=true
+      - TS_SERVE_CONFIG=/tmp/serve.json
+    volumes:
+      - ./tailscale_state:/var/lib/tailscale
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    network_mode: service:tailscale
+    depends_on:
+      - tailscale
+    environment:
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-UTC}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+    restart: unless-stopped

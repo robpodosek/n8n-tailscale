@@ -1,0 +1,10 @@
+.tmp/
+.env
+credentials.json
+token.json
+__pycache__/
+*.pyc
+
+# Local Data
+n8n_data/
+tailscale_state/
