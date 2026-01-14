@@ -27,6 +27,9 @@ services:
              "${TS_HOSTNAME}.${TS_TAILNET}:443": true
           }
         }' > /tmp/serve.json && \
+        (while ! tailscale status >/dev/null 2>&1; do sleep 1; done; \
+         echo "Tailscale up, forcing Funnel..." && \
+         tailscale funnel --bg 5678) & \
         exec /usr/local/bin/containerboot
     environment:
       - TS_AUTHKEY=${TS_AUTHKEY}
@@ -50,6 +53,7 @@ services:
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-UTC}
       - TZ=${TZ:-UTC}
+      - WEBHOOK_URL=https://${TS_HOSTNAME}.${TS_TAILNET}/
     volumes:
       - ./n8n_data:/home/node/.n8n
     restart: unless-stopped
