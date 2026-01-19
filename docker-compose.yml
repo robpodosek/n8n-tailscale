@@ -54,6 +54,7 @@ services:
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-UTC}
       - TZ=${TZ:-UTC}
       - WEBHOOK_URL=https://${TS_HOSTNAME}.${TS_TAILNET}/
+      - GOOGLE_GEMINI_API_KEY=${GOOGLE_GEMINI_API_KEY}
     volumes:
       - ./n8n_data:/home/node/.n8n
     restart: unless-stopped
